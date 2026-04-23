@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI HCP CRM
 
 Production AI-powered Healthcare Professional CRM.
@@ -48,3 +49,7 @@ Agent tools auto-triggered by chat.
 `docker compose down -v ; docker compose up --build`
 
 Production ready! 🚀
+=======
+# ai-crm-system
+AI-powered Healthcare CRM system for managing HCPs, workflows, automation, and intelligent agent-based interactions.
+>>>>>>> b4ded13a2dd6ec4093b940e3b6f8851e022003ee
