@@ -1,0 +1,16 @@
+CREATE DATABASE crm_ai;
+
+\c crm_ai;
+
+CREATE TABLE hcp (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE interactions (
+    id SERIAL PRIMARY KEY,
+    hcp_id INT REFERENCES hcp(id) ON DELETE CASCADE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

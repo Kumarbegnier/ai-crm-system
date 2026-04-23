@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+psycopg2-binary
+python-dotenv
+pydantic
+asyncpg
+groq
+langchain-groq
+langchain-core
+langchain-community
+
