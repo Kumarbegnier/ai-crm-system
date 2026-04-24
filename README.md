@@ -52,3 +52,6 @@ Production ready! 🚀
 =======
 # ai-crm-system
 AI-powered Healthcare CRM system for managing HCPs, workflows, automation, and intelligent agent-based interactions.
+
+<img width="1919" height="915" alt="image" src="https://github.com/user-attachments/assets/1b0e7dcf-404f-4d55-b05c-8b3a013515a3" />
+
