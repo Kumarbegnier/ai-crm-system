@@ -4,7 +4,7 @@
 Production AI-powered Healthcare Professional CRM.
 
 ## Features
-- Real-time WS chat agent (Groq LLM)
+- Real-time WS chat agent (Groq LLM/ollma)
 - PostgreSQL HCP/interactions CRUD
 - React frontend (dark/typing/memory)
 - Docker full stack
@@ -40,7 +40,7 @@ interactions (id, hcp_id, notes, created_at)
 ## APIs
 - POST /log {"hcp_name": "Dr Smith", "notes": "insulin"}
 - GET /hcp
-- GET /hcp/Dr Smith
+- GET /hcp/Dr Neeraj Kumar
 - DELETE /interaction/1
 
 Agent tools auto-triggered by chat.
