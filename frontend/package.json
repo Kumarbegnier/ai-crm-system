@@ -15,9 +15,7 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "zustand": "^4.5.2",
-    "clsx": "^2.0.0",
-    "lucide-react": "^0.294.0"
+    "lucide-react": "^0.468.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.4",

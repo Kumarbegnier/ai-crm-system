@@ -1,107 +1,83 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { InputArea } from '../src/components/InputArea/InputArea'
-import { ChatProvider } from '../src/contexts/ChatContext'
-
-// Mock WS
-global.WebSocket = vi.fn(() => ({
-  readyState: WebSocket.OPEN,
-  close: vi.fn(),
-  send: vi.fn(),
-  onopen: vi.fn(),
-  onclose: vi.fn(),
-  onmessage: vi.fn()
-})) as any
 
 describe('InputArea', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
+  const defaultProps = {
+    onSend: vi.fn(),
+    isConnected: true,
+    loading: false,
+  }
+
+  beforeEach(() => vi.clearAllMocks())
+
+  it('renders textarea and send button', () => {
+    render(<InputArea {...defaultProps} />)
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument()
   })
 
-  it('renders input and send button', () => {
-    render(
-      <ChatProvider>
-        <InputArea onSend={vi.fn()} />
-      </ChatProvider>
-    )
-
-    expect(screen.getByPlaceholderText(/Type your HCP interaction/i)).toBeInTheDocument()
-    expect(screen.getByRole('button')).toBeInTheDocument()
+  it('calls onSend with trimmed string on button click', () => {
+    render(<InputArea {...defaultProps} />)
+    const textarea = screen.getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: '  Met Dr. Sharma  ' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    expect(defaultProps.onSend).toHaveBeenCalledWith('Met Dr. Sharma')
   })
 
-  it('sends message on button click', async () => {
-    const onSend = vi.fn()
-    render(
-      <ChatProvider>
-        <InputArea onSend={onSend} />
-      </ChatProvider>
-    )
-
-    const input = screen.getByPlaceholderText(/Type your HCP interaction/i)
-    const button = screen.getByRole('button')
-
-    fireEvent.change(input, { target: { value: 'Test HCP interaction' } })
-    fireEvent.click(button)
-
-    await waitFor(() => {
-      expect(onSend).toHaveBeenCalledWith(expect.objectContaining({
-        role: 'user',
-        text: 'Test HCP interaction'
-      }))
-    })
+  it('calls onSend on Enter key (not Shift+Enter)', () => {
+    render(<InputArea {...defaultProps} />)
+    const textarea = screen.getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: 'Test message' } })
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: false })
+    expect(defaultProps.onSend).toHaveBeenCalledWith('Test message')
   })
 
-  it('handles enter key', async () => {
-    const onSend = vi.fn()
-    render(
-      <ChatProvider>
-        <InputArea onSend={onSend} />
-      </ChatProvider>
-    )
-
-    const input = screen.getByPlaceholderText(/Type your HCP interaction/i)
-    fireEvent.change(input, { target: { value: 'Test' } })
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
-
-    await waitFor(() => {
-      expect(onSend).toHaveBeenCalled()
-    })
+  it('does NOT send on Shift+Enter', () => {
+    render(<InputArea {...defaultProps} />)
+    const textarea = screen.getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: 'Test' } })
+    fireEvent.keyDown(textarea, { key: 'Enter', shiftKey: true })
+    expect(defaultProps.onSend).not.toHaveBeenCalled()
   })
 
-  it('shows connecting message when not connected', () => {
-    ;(global.WebSocket as any).mockImplementation(() => ({
-      readyState: WebSocket.CONNECTING,
-      close: vi.fn(),
-      send: vi.fn()
-    }))
-
-    render(
-      <ChatProvider>
-        <InputArea onSend={vi.fn()} />
-      </ChatProvider>
-    )
-
-    expect(screen.getByText(/Connecting to AI Agent/i)).toBeInTheDocument()
+  it('does NOT send empty or whitespace-only input', () => {
+    render(<InputArea {...defaultProps} />)
+    const textarea = screen.getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    expect(defaultProps.onSend).not.toHaveBeenCalled()
   })
 
-  it('disables input and button when not connected', () => {
-    ;(global.WebSocket as any).mockImplementation(() => ({
-      readyState: WebSocket.CLOSED,
-      close: vi.fn(),
-      send: vi.fn()
-    }))
+  it('disables textarea and button when not connected', () => {
+    render(<InputArea {...defaultProps} isConnected={false} />)
+    expect(screen.getByRole('textbox')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /send/i })).toBeDisabled()
+  })
 
-    render(
-      <ChatProvider>
-        <InputArea onSend={vi.fn()} />
-      </ChatProvider>
-    )
+  it('shows reconnecting hint when not connected', () => {
+    render(<InputArea {...defaultProps} isConnected={false} />)
+    expect(screen.getByText(/reconnecting/i)).toBeInTheDocument()
+  })
 
-    const input = screen.getByPlaceholderText(/Type your HCP interaction/i)
-    const button = screen.getByRole('button')
+  it('disables send button while loading', () => {
+    render(<InputArea {...defaultProps} loading={true} />)
+    expect(screen.getByRole('button', { name: /send/i })).toBeDisabled()
+  })
 
-    expect(input).toBeDisabled()
-    expect(button).toBeDisabled()
+  it('clears textarea after send', () => {
+    render(<InputArea {...defaultProps} />)
+    const textarea = screen.getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: 'Hello' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    expect(textarea).toHaveValue('')
+  })
+
+  it('shows character counter near limit', () => {
+    render(<InputArea {...defaultProps} />)
+    const textarea = screen.getByRole('textbox')
+    // Type 950 chars (1000 - 950 = 50 remaining, which is <= 100 so counter shows)
+    fireEvent.change(textarea, { target: { value: 'a'.repeat(950) } })
+    expect(screen.getByText('50')).toBeInTheDocument()
   })
 })
-

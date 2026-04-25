@@ -1,38 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useState, useCallback } from 'react'
 
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
-): [T, (value: T | ((val: T) => T)) => void, () => string | null] {
-  const [storedValue, setStoredValue] = useState<T>(initialValue)
-
-  useEffect(() => {
+): [T, (value: T | ((val: T) => T)) => void] {
+  // Lazy initializer — reads localStorage once at mount, no useEffect flash
+  const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = window.localStorage.getItem(key)
-      
-      if (item === null) {
-        window.localStorage.setItem(key, JSON.stringify(initialValue))
-        setStoredValue(initialValue)
-      } else {
-        setStoredValue(JSON.parse(item))
-      }
-    } catch (error) {
-      console.error('LocalStorage error:', error)
+      return item !== null ? (JSON.parse(item) as T) : initialValue
+    } catch {
+      return initialValue
     }
-  }, [key, initialValue])
+  })
 
-  const setValue = (value: T | ((val: T) => T)) => {
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value
-      setStoredValue(valueToStore)
-      window.localStorage.setItem(key, JSON.stringify(valueToStore))
+      setStoredValue(prev => {
+        const valueToStore = value instanceof Function ? value(prev) : value
+        window.localStorage.setItem(key, JSON.stringify(valueToStore))
+        return valueToStore
+      })
     } catch (error) {
       console.error('LocalStorage set error:', error)
     }
-  }
+  }, [key])
 
-  const persist = () => window.localStorage.getItem(key)
-
-  return [storedValue, setValue, persist]
+  return [storedValue, setValue]
 }
-

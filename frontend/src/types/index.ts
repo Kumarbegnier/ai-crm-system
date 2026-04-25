@@ -1,12 +1,7 @@
 export interface Message {
-  role: 'user' | 'ai';
+  id: string;
+  role: 'user' | 'assistant';
   text: string;
   timestamp: string;
-}
-
-export interface ChatState {
-  messages: Message[];
-  loading: boolean;
-  dark: boolean;
 }
 
