@@ -45,6 +45,7 @@ _HCP_NEW_COLUMNS = [
     ("city",                  "TEXT"),
     ("state",                 "TEXT"),
     ("country",               "TEXT DEFAULT 'India'"),
+    ("normalized_name",       "TEXT"),
     ("engagement_score",      "REAL DEFAULT 0"),
     ("total_interactions",    "INTEGER DEFAULT 0"),
     ("last_interaction_date", "TIMESTAMP"),
@@ -116,6 +117,7 @@ def init_db():
                 city                  TEXT,
                 state                 TEXT,
                 country               TEXT    DEFAULT 'India',
+                normalized_name       TEXT    UNIQUE,
                 engagement_score      REAL    DEFAULT 0,
                 total_interactions    INTEGER DEFAULT 0,
                 last_interaction_date TIMESTAMP,
@@ -197,6 +199,20 @@ def init_db():
 
             CREATE INDEX IF NOT EXISTS idx_hcp_tags_hcp_id ON hcp_tags(hcp_id);
             CREATE INDEX IF NOT EXISTS idx_hcp_tags_tag_id ON hcp_tags(tag_id);
+
+            CREATE TABLE IF NOT EXISTS appointments (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                hcp_id         INTEGER NOT NULL,
+                date           TEXT    NOT NULL,
+                time           TEXT    NOT NULL,
+                status         TEXT    DEFAULT 'scheduled',
+                notes          TEXT,
+                created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(hcp_id) REFERENCES hcps(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_appointments_hcp_date ON appointments(hcp_id, date);
         """)
 
         # Second pass: add any columns still missing after table creation

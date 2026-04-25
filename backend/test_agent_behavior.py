@@ -52,6 +52,9 @@ def fresh_db(tmp_path, monkeypatch):
     db_file = tmp_path / "test_crm.db"
     monkeypatch.setattr("app.db.DB_PATH", str(db_file))
     monkeypatch.setattr("app.db_utils.DB_PATH", str(db_file))
+    # Clear connection cache so init_db uses the new DB_PATH
+    from app.db import _local
+    _local.conn = None
     # Also patch vector_store's get_connection
     monkeypatch.setattr("app.vector_store.get_connection", get_connection)
     init_db()
@@ -59,6 +62,7 @@ def fresh_db(tmp_path, monkeypatch):
     # Cleanup sessions between tests
     from app.agent import _SESSIONS
     _SESSIONS.clear()
+    _local.conn = None
 
 
 @pytest.fixture

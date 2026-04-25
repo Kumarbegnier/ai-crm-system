@@ -4,6 +4,8 @@ gunicorn==23.0.0
 python-dotenv==1.0.1
 python-multipart==0.0.20
 pydantic==2.10.3
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
 ollama==0.4.4
 langgraph==0.2.60
 langchain-core==0.3.28

@@ -2,8 +2,11 @@ import json
 import os
 import re
 import hashlib
+import hmac
 from datetime import datetime, timedelta
-from .db import get_connection
+from .db import get_connection, DB_PATH
+
+__all__ = ["DB_PATH", "get_connection"]
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +44,7 @@ def _verify_password(password: str, stored: str) -> bool:
     try:
         salt, h = stored.split("$", 1)
         candidate = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 260_000).hex()
-        return hashlib.compare_digest(candidate, h)
+        return hmac.compare_digest(candidate, h)
     except Exception:
         return False
 

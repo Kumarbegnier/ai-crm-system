@@ -7,6 +7,7 @@ from ..db_utils import (
     create_user, get_user_by_id, get_all_users,
     update_user, verify_user_password, deactivate_user, VALID_ROLES,
 )
+from ..auth import create_access_token
 
 router = APIRouter(tags=["Users"])
 
@@ -67,6 +68,19 @@ class LoginRequest(BaseModel):
     password: str
 
 
+@router.post("/auth/signup", status_code=201)
+async def signup(req: UserRequest):
+    """Register a new user and return a JWT token."""
+    try:
+        user_id = await asyncio.to_thread(create_user, req.model_dump(exclude_none=True))
+        token = create_access_token({"sub": str(user_id), "email": req.email, "role": req.role or "sales_rep"})
+        return {"status": "created", "user_id": user_id, "token": token}
+    except sqlite3.IntegrityError:
+        raise HTTPException(409, detail="Email already registered")
+    except Exception as e:
+        raise HTTPException(400, detail=str(e))
+
+
 @router.post("/users", status_code=201)
 async def register_user(req: UserRequest):
     try:
@@ -110,4 +124,5 @@ async def login(req: LoginRequest):
     user = await asyncio.to_thread(verify_user_password, req.email, req.password)
     if not user:
         raise HTTPException(401, detail="Invalid credentials")
-    return {"status": "ok", "user": user}
+    token = create_access_token({"sub": str(user["id"]), "email": user["email"], "role": user["role"]})
+    return {"status": "ok", "token": token, "user": user}
